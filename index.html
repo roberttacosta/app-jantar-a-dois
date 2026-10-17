@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#140a1c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Jantar a Dois</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#140a1c; --bg2:#1f0f2e; --card:rgba(255,255,255,.06); --card2:rgba(255,255,255,.1);
+  --line:rgba(255,255,255,.12); --text:#f6eef9; --muted:#b9a7c7;
+  --p1:#ff5c8a; --p1d:#c2184d; --p2:#b069ff; --p2d:#6a2fd0;
+  --wine:#7a1f3d; --gold:#ffd166; --ok:#4ade80; --bad:#fb7185;
+  --radius:22px; --shadow:0 18px 50px rgba(0,0,0,.45);
+  --safe-top:env(safe-area-inset-top,0px); --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{
+  font-family:'Nunito',system-ui,sans-serif;color:var(--text);background:var(--bg);
+  background-image:
+    radial-gradient(1200px 600px at 10% -10%, rgba(255,92,138,.22), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(176,105,255,.22), transparent 60%),
+    radial-gradient(700px 500px at 50% 110%, rgba(122,31,61,.35), transparent 60%);
+  background-attachment:fixed; min-height:100dvh; overflow-x:hidden;
+}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px);background-size:26px 26px;opacity:.35}
+.app{position:relative;z-index:1;max-width:520px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;padding:calc(var(--safe-top) + 12px) 16px calc(var(--safe-bottom) + 24px)}
+h1,h2,h3{font-family:'Playfair Display',serif;margin:0;letter-spacing:.2px}
+p{margin:0}
+button{font-family:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input,textarea{font-family:inherit}
+
+/* screens */
+.screen{display:none;animation:fadeUp .35s ease both;flex:1;flex-direction:column}
+.screen.active{display:flex}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+@keyframes floaty{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-8px) rotate(3deg)}}
+@keyframes shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 0 0 rgba(255,209,102,.0)}50%{box-shadow:0 0 0 10px rgba(255,209,102,.12)}}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+@keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
+
+/* generic */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:var(--shadow)}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px 18px;border-radius:18px;font-weight:800;font-size:17px;transition:transform .12s ease,filter .2s,opacity .2s;user-select:none}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;box-shadow:0 10px 30px rgba(255,92,138,.35)}
+.btn-ghost{background:var(--card2);border:1px solid var(--line)}
+.btn-soft{background:rgba(255,255,255,.05);border:1px dashed var(--line);color:var(--muted);font-weight:700}
+.btn[disabled]{opacity:.45;filter:grayscale(.4);pointer-events:none}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.center{text-align:center}
+.row{display:flex;gap:10px;align-items:center}
+.grow{flex:1}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mt24{margin-top:24px}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;background:rgba(255,255,255,.08);border:1px solid var(--line);color:var(--muted)}
+
+/* top bar */
+.topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.iconbtn{width:44px;height:44px;border-radius:14px;background:var(--card2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:20px;flex:none;transition:transform .12s}
+.iconbtn:active{transform:scale(.92)}
+.topbar .title{flex:1;text-align:center;font-weight:800;font-size:15px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+
+/* scoreboard */
+.scoreboard{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:12px 14px;border-radius:20px;background:linear-gradient(135deg,rgba(255,92,138,.14),rgba(176,105,255,.14));border:1px solid var(--line);position:sticky;top:calc(var(--safe-top) + 8px);z-index:5;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.player{display:flex;align-items:center;gap:10px;min-width:0}
+.player.right{flex-direction:row-reverse;text-align:right}
+.avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;flex:none;border:2px solid transparent;background:var(--card2)}
+.player.p1 .avatar{border-color:var(--p1);box-shadow:0 0 18px rgba(255,92,138,.35)}
+.player.p2 .avatar{border-color:var(--p2);box-shadow:0 0 18px rgba(176,105,255,.35)}
+.pname{font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
+.pscore{font-family:'Playfair Display',serif;font-size:28px;line-height:1;font-weight:700}
+.pscore.bump{animation:bump .45s ease}
+.vs{font-family:'Playfair Display',serif;font-style:italic;color:var(--gold);font-size:16px;opacity:.9}
+.leader .pname::after{content:" 👑"}
+.progressbar{height:5px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:8px}
+.progressbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--p1),var(--p2));transition:width .4s ease}
+
+/* home */
+.hero{text-align:center;padding:28px 6px 12px}
+.hero .logo{font-size:64px;display:inline-block;animation:floaty 4s ease-in-out infinite;filter:drop-shadow(0 10px 20px rgba(255,92,138,.35))}
+.hero h1{font-size:40px;line-height:1.05;margin-top:10px;background:linear-gradient(90deg,#fff,#ffd1e1,#e2cbff,#fff);background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 6s linear infinite}
+.hero p{margin-top:10px;color:var(--muted);font-size:15px}
+.field{margin-top:14px}
+.field label{display:block;font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.namebox{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:16px;padding:8px 8px 8px 8px;transition:border-color .2s,box-shadow .2s}
+.namebox:focus-within{border-color:var(--p1);box-shadow:0 0 0 4px rgba(255,92,138,.15)}
+.namebox.two:focus-within{border-color:var(--p2);box-shadow:0 0 0 4px rgba(176,105,255,.15)}
+.namebox input{flex:1;background:none;border:0;outline:0;color:var(--text);font-size:18px;font-weight:700;min-width:0;padding:8px 4px}
+.namebox input::placeholder{color:rgba(255,255,255,.3)}
+.avpick{width:46px;height:46px;border-radius:12px;background:var(--card2);font-size:24px;display:flex;align-items:center;justify-content:center;flex:none;border:1px solid var(--line)}
+.emojigrid{display:none;flex-wrap:wrap;gap:8px;margin-top:10px;padding:10px;background:rgba(0,0,0,.25);border-radius:14px;border:1px solid var(--line)}
+.emojigrid.open{display:flex;animation:fadeUp .2s ease}
+.emojigrid button{width:44px;height:44px;border-radius:12px;font-size:22px;background:var(--card)}
+.emojigrid button.sel{background:linear-gradient(135deg,var(--p1),var(--p2))}
+.goal{display:flex;gap:8px;margin-top:10px}
+.goal button{flex:1;padding:12px;border-radius:14px;background:var(--card);border:1px solid var(--line);font-weight:800;font-size:15px}
+.goal button.sel{background:linear-gradient(135deg,var(--p1),var(--p2));border-color:transparent}
+
+/* menu */
+.menu{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+.mode{display:flex;align-items:center;gap:16px;padding:18px;border-radius:22px;border:1px solid var(--line);background:var(--card);text-align:left;position:relative;overflow:hidden;transition:transform .12s}
+.mode:active{transform:scale(.98)}
+.mode::after{content:"›";position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:30px;color:var(--muted);opacity:.6}
+.mode .ic{width:58px;height:58px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:30px;flex:none}
+.mode.m1 .ic{background:linear-gradient(135deg,rgba(255,92,138,.35),rgba(255,92,138,.08))}
+.mode.m2 .ic{background:linear-gradient(135deg,rgba(176,105,255,.35),rgba(176,105,255,.08))}
+.mode.m3 .ic{background:linear-gradient(135deg,rgba(255,209,102,.35),rgba(255,209,102,.08))}
+.mode.m4 .ic{background:linear-gradient(135deg,rgba(74,222,128,.3),rgba(74,222,128,.06))}
+.mode h3{font-size:19px}
+.mode p{font-size:13px;color:var(--muted);margin-top:3px;padding-right:18px}
+.mode .pts{display:inline-block;margin-top:6px;font-size:10px;font-weight:900;color:var(--gold);letter-spacing:1px;background:rgba(255,209,102,.12);border:1px solid rgba(255,209,102,.3);padding:3px 8px;border-radius:999px}
+.menu-foot{display:flex;gap:10px;margin-top:14px}
+.menu-foot .btn{font-size:14px;padding:13px}
+
+/* game shared */
+.qcard{position:relative;padding:28px 22px;border-radius:26px;background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.04));border:1px solid var(--line);box-shadow:var(--shadow);min-height:190px;display:flex;flex-direction:column;justify-content:center;animation:pop .35s ease}
+.qcard .deco{position:absolute;top:14px;left:18px;font-size:44px;opacity:.12;font-family:'Playfair Display',serif}
+.qcard .emo{font-size:40px;margin-bottom:10px;animation:wiggle 2.5s ease-in-out infinite}
+.qcard .q{font-family:'Playfair Display',serif;font-size:23px;line-height:1.3;font-weight:600}
+.qcard .q b{color:var(--gold)}
+.counter{display:flex;justify-content:space-between;align-items:center;margin:12px 2px 0;font-size:12px;color:var(--muted);font-weight:700}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.choice{padding:18px 12px;border-radius:20px;border:1px solid var(--line);background:var(--card);display:flex;flex-direction:column;align-items:center;gap:8px;font-weight:800;font-size:16px;transition:transform .12s,background .2s}
+.choice:active{transform:scale(.96)}
+.choice .avatar{width:54px;height:54px;font-size:28px}
+.choice.c1{box-shadow:inset 0 0 0 1px rgba(255,92,138,.3)}
+.choice.c2{box-shadow:inset 0 0 0 1px rgba(176,105,255,.3)}
+.choice.picked{background:linear-gradient(135deg,var(--p1),var(--p2));transform:scale(1.03)}
+.choice.dim{opacity:.35}
+.toast{position:fixed;left:50%;bottom:calc(var(--safe-bottom) + 24px);transform:translate(-50%,30px);background:#2a1640;border:1px solid var(--line);padding:12px 18px;border-radius:999px;font-weight:800;opacity:0;transition:all .3s;z-index:50;box-shadow:var(--shadow);white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* stars */
+.stars{display:flex;justify-content:center;gap:6px;margin-top:18px}
+.star{font-size:40px;filter:grayscale(1) opacity(.35);transition:transform .15s,filter .2s;padding:2px}
+.star.on{filter:none;transform:scale(1.1)}
+.star:active{transform:scale(1.3)}
+.rating-label{text-align:center;margin-top:10px;font-weight:800;color:var(--gold);min-height:22px}
+.avg{display:flex;justify-content:space-between;padding:12px 16px;border-radius:16px;background:rgba(0,0,0,.2);border:1px solid var(--line);margin-top:14px;font-size:13px;color:var(--muted)}
+.avg b{color:var(--text)}
+
+/* suposições board */
+.turnbar{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:10px;font-size:13px;color:var(--muted);font-weight:700;flex-wrap:wrap;text-align:center}
+.turnbar .chip{display:inline-flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--line);padding:6px 10px;border-radius:999px;color:var(--text)}
+.board{margin-top:14px;padding:14px;border-radius:22px;background:
+   linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px) 0 0/100% 28px,
+   rgba(0,0,0,.28);border:1px solid var(--line);min-height:150px}
+.board-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.board-head h3{font-size:15px;color:var(--muted);font-family:'Nunito',sans-serif;text-transform:uppercase;letter-spacing:1px}
+.notes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.note{position:relative;padding:12px 12px 10px;border-radius:6px 16px 6px 16px;color:#2a1626;font-weight:700;font-size:14px;line-height:1.3;box-shadow:0 8px 18px rgba(0,0,0,.35);animation:pop .3s ease;transform:rotate(var(--r,0deg));word-break:break-word;min-height:72px}
+.note .ne{font-size:22px;display:block;margin-bottom:4px}
+.note .del{position:absolute;top:4px;right:6px;font-size:14px;opacity:.55;font-weight:900}
+.note .pin{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:16px}
+.note.final{outline:3px solid var(--gold);outline-offset:2px;animation:pulseGlow 1.6s infinite}
+.note.final::after{content:"RESPOSTA FINAL";position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);background:var(--gold);color:#3b2a00;font-size:9px;font-weight:900;letter-spacing:1px;padding:2px 7px;border-radius:999px;white-space:nowrap}
+.note.y{background:#ffe08a}.note.pk{background:#ffb3c6}.note.pu{background:#d9c2ff}.note.gr{background:#b8f2c9}.note.bl{background:#bfe3ff}.note.or{background:#ffcfa3}
+.empty-board{grid-column:1/-1;text-align:center;color:var(--muted);font-size:13px;padding:18px 8px}
+.composer{margin-top:12px;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:18px;padding:10px}
+.composer .row input{flex:1;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--text);font-size:16px;outline:0;min-width:0}
+.composer .row input:focus{border-color:var(--p2)}
+.composer .add{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--p1),var(--p2));font-size:22px;font-weight:900;flex:none}
+.emostrip{display:flex;gap:6px;overflow-x:auto;padding:8px 2px 2px;scrollbar-width:none}
+.emostrip::-webkit-scrollbar{display:none}
+.emostrip button{flex:none;width:40px;height:40px;border-radius:10px;font-size:20px;background:var(--card)}
+.emostrip button.sel{background:linear-gradient(135deg,var(--p1),var(--p2));transform:scale(1.08)}
+.reveal{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.reveal .btn{flex-direction:column;gap:2px;padding:14px 10px;font-size:15px;line-height:1.2}
+.reveal .btn small{font-weight:700;font-size:11px;opacity:.85}
+.btn-ok{background:linear-gradient(135deg,#22c55e,#4ade80);color:#06260f}
+.btn-bad{background:linear-gradient(135deg,#be123c,#fb7185);color:#fff}
+.hint{font-size:12px;color:var(--muted);text-align:center;margin-top:10px}
+
+/* roleta */
+.wheel-wrap{display:flex;flex-direction:column;align-items:center;margin-top:12px}
+.wheel{width:230px;height:230px;border-radius:50%;position:relative;border:6px solid rgba(255,255,255,.12);box-shadow:var(--shadow),inset 0 0 40px rgba(0,0,0,.4);transition:transform 4s cubic-bezier(.17,.67,.12,1);background:conic-gradient(#ff5c8a 0 45deg,#b069ff 45deg 90deg,#ffd166 90deg 135deg,#7a1f3d 135deg 180deg,#4ade80 180deg 225deg,#ff8ab0 225deg 270deg,#6a2fd0 270deg 315deg,#fca5a5 315deg 360deg)}
+.wheel span{font-size:22px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
+.pointer{font-size:34px;transform:rotate(180deg);margin-bottom:-14px;z-index:2;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+.wheel-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:54px;height:54px;border-radius:50%;background:#1f0f2e;border:3px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:24px}
+
+/* modal / winner */
+.overlay{position:fixed;inset:0;background:rgba(10,4,16,.8);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;z-index:40}
+.overlay.show{display:flex}
+.modal{width:100%;max-width:420px;background:linear-gradient(160deg,#2a1640,#1a0c28);border:1px solid var(--line);border-radius:28px;padding:28px 22px;text-align:center;animation:pop .4s ease;box-shadow:var(--shadow)}
+.modal .big{font-size:72px;animation:floaty 3s ease-in-out infinite}
+.modal h2{font-size:30px;margin-top:8px}
+.modal p{color:var(--muted);margin-top:8px}
+.modal .btn{margin-top:12px}
+canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
+
+/* history */
+.hist{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.hist .item{display:flex;gap:10px;align-items:center;padding:10px 12px;background:rgba(0,0,0,.2);border-radius:14px;border:1px solid var(--line);font-size:13px}
+.hist .item .who{font-weight:800}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.stat{padding:12px 8px;background:rgba(0,0,0,.2);border:1px solid var(--line);border-radius:14px;text-align:center}
+.stat b{display:block;font-size:22px;font-family:'Playfair Display',serif}
+.stat span{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.footer{margin-top:auto;padding-top:22px;text-align:center;font-size:12px;color:rgba(255,255,255,.35)}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+<div class="app" id="app">
+
+<!-- ================= HOME / SETUP ================= -->
+<section class="screen" id="s-home">
+  <div class="hero">
+    <span class="logo">🍷</span>
+    <h1>Jantar a Dois</h1>
+    <p>Um jogo de mesa pra duas pessoas apaixonadas, uma taça e uma noite inteira.</p>
+  </div>
+  <div class="card">
+    <div class="field">
+      <label>Jogadora 1</label>
+      <div class="namebox">
+        <button class="avpick" id="av1" onclick="toggleEmoji(1)">🌹</button>
+        <input id="in-n1" placeholder="Nome dela" maxlength="14" autocomplete="off">
+      </div>
+      <div class="emojigrid" id="eg1"></div>
+    </div>
+    <div class="field">
+      <label>Jogadora 2</label>
+      <div class="namebox two">
+        <button class="avpick" id="av2" onclick="toggleEmoji(2)">🌙</button>
+        <input id="in-n2" placeholder="Nome dela" maxlength="14" autocomplete="off">
+      </div>
+      <div class="emojigrid" id="eg2"></div>
+    </div>
+    <div class="field">
+      <label>Meta de pontos pra vencer o jantar</label>
+      <div class="goal" id="goal">
+        <button data-g="10" class="sel">10</button>
+        <button data-g="15">15</button>
+        <button data-g="20">20</button>
+        <button data-g="999">∞</button>
+      </div>
+    </div>
+    <button class="btn btn-primary mt24" onclick="startGame()">🍽️ Começar Jantar</button>
+    <button class="btn btn-ghost mt12" id="btn-continue" style="display:none" onclick="continueGame()">▶️ Continuar jantar anterior</button>
+  </div>
+  <p class="footer">feito com 💜 · funciona offline · nada sai do seu celular</p>
+</section>
+
+<!-- ================= MENU ================= -->
+<section class="screen" id="s-menu">
+  <div class="scoreboard" data-sb></div>
+  <div class="center mt24">
+    <span class="tag">🕯️ Menu da noite</span>
+    <h2 style="font-size:28px;margin-top:10px">O que vamos jogar?</h2>
+    <p class="muted small mt8" id="menu-sub"></p>
+  </div>
+  <div class="menu">
+    <button class="mode m1" onclick="go('g1')"><div class="ic">🤔</div><div><h3>Quem é mais provável?</h3><p>Debatam, cheguem a um veredito e apontem a culpada.</p><span class="pts">+1 PONTO</span></div></button>
+    <button class="mode m2" onclick="go('g2')"><div class="ic">🎬</div><div><h3>Cenários Absurdos</h3><p>Missões impossíveis, só colaboração. Avaliem a sobrevivência do casal.</p><span class="pts">SEM PLACAR</span></div></button>
+    <button class="mode m3" onclick="go('g3')"><div class="ic">🔮</div><div><h3>Jogo das Suposições</h3><p>Quanto você realmente conhece ela? Com board de ideias.</p><span class="pts">+1 PONTO</span></div></button>
+    <button class="mode m4" onclick="go('g4')"><div class="ic">🎡</div><div><h3>Roleta do Brinde</h3><p>Gire e cumpra o desafio. Quem cumprir ganha ponto.</p><span class="pts">+1 PONTO</span></div></button>
+  </div>
+  <div class="menu-foot">
+    <button class="btn btn-ghost" onclick="randomMode()">🎲 Surpreenda</button>
+    <button class="btn btn-ghost" onclick="go('stats')">📊 Resumo</button>
+    <button class="btn btn-ghost" onclick="confirmReset()">↺ Zerar</button>
+  </div>
+</section>
+
+<!-- ================= G1: MAIS PROVÁVEL ================= -->
+<section class="screen" id="s-g1">
+  <div class="topbar"><button class="iconbtn" onclick="go('menu')">‹</button><span class="title">Quem é mais provável?</span><button class="iconbtn" onclick="skipQ(1)" title="Pular">⏭</button></div>
+  <div class="scoreboard" data-sb></div>
+  <div class="counter"><span id="g1-count"></span><span>Toquem no nome escolhido</span></div>
+  <div class="qcard mt8"><span class="deco">“</span><div class="emo" id="g1-emo">🤔</div><p class="q" id="g1-q"></p></div>
+  <div class="choices">
+    <button class="choice c1" id="g1-c1" onclick="pickLikely(1)"><span class="avatar" data-av1></span><span data-n1></span></button>
+    <button class="choice c2" id="g1-c2" onclick="pickLikely(2)"><span class="avatar" data-av2></span><span data-n2></span></button>
+  </div>
+  <button class="btn btn-soft mt12" onclick="pickLikely(0)">💞 As duas, sem dúvida (+1 cada)</button>
+  <button class="btn btn-primary mt16" id="g1-next" onclick="nextQ(1)" disabled>Próxima pergunta →</button>
+</section>
+
+<!-- ================= G2: CENÁRIOS ================= -->
+<section class="screen" id="s-g2">
+  <div class="topbar"><button class="iconbtn" onclick="go('menu')">‹</button><span class="title">Cenários Absurdos</span><button class="iconbtn" onclick="skipQ(2)" title="Pular">⏭</button></div>
+  <div class="scoreboard" data-sb></div>
+  <div class="counter"><span id="g2-count"></span><span>Debatam o plano juntas</span></div>
+  <div class="qcard mt8"><span class="deco">“</span><div class="emo" id="g2-emo">🎬</div><p class="q" id="g2-q" style="font-size:19px"></p></div>
+  <p class="center muted small mt16">Nível de sobrevivência do casal nesse cenário:</p>
+  <div class="stars" id="stars"></div>
+  <div class="rating-label" id="rating-label">toquem nas estrelas</div>
+  <div class="avg"><span>Cenários enfrentados: <b id="g2-done">0</b></span><span>Média do casal: <b id="g2-avg">–</b></span></div>
+  <button class="btn btn-primary mt16" id="g2-next" onclick="nextQ(2)" disabled>Próximo cenário →</button>
+</section>
+
+<!-- ================= G3: SUPOSIÇÕES ================= -->
+<section class="screen" id="s-g3">
+  <div class="topbar"><button class="iconbtn" onclick="go('menu')">‹</button><span class="title">Jogo das Suposições</span><button class="iconbtn" onclick="skipQ(3)" title="Pular">⏭</button></div>
+  <div class="scoreboard" data-sb></div>
+  <div class="turnbar" id="g3-turn"></div>
+  <div class="qcard mt12" style="min-height:150px;padding:22px"><span class="deco">“</span><p class="q" id="g3-q" style="font-size:20px"></p></div>
+  <div class="board">
+    <div class="board-head"><h3>📌 Board de palpites</h3><button class="small muted" onclick="clearNotes()">limpar</button></div>
+    <div class="notes" id="notes"></div>
+  </div>
+  <div class="composer">
+    <div class="row">
+      <input id="note-in" placeholder="Escreva um palpite..." maxlength="60" autocomplete="off" onkeydown="if(event.key==='Enter')addNote()">
+      <button class="add" onclick="addNote()">+</button>
+    </div>
+    <div class="emostrip" id="emostrip"></div>
+  </div>
+  <p class="hint">Toque em um palpite pra marcá-lo como <b style="color:var(--gold)">resposta final</b>. Depois, <span id="g3-owner"></span> revela a verdade:</p>
+  <div class="reveal">
+    <button class="btn btn-ok" onclick="revealG3(true)">🎯 Acertou!<small id="g3-okl"></small></button>
+    <button class="btn btn-bad" onclick="revealG3(false)">💀 Errou feio<small>0 pontos</small></button>
+  </div>
+</section>
+
+<!-- ================= G4: ROLETA ================= -->
+<section class="screen" id="s-g4">
+  <div class="topbar"><button class="iconbtn" onclick="go('menu')">‹</button><span class="title">Roleta do Brinde</span><span class="iconbtn" style="opacity:0"></span></div>
+  <div class="scoreboard" data-sb></div>
+  <div class="turnbar mt12" id="g4-turn"></div>
+  <div class="wheel-wrap">
+    <div class="pointer">🔻</div>
+    <div class="wheel" id="wheel"><div class="wheel-center">🥂</div></div>
+  </div>
+  <div class="qcard mt16" id="g4-card" style="min-height:120px;padding:20px"><div class="emo" id="g4-emo">🎡</div><p class="q" id="g4-q" style="font-size:19px">Gire a roleta e descubra o desafio da vez.</p></div>
+  <button class="btn btn-primary mt16" id="g4-spin" onclick="spinWheel()">🎡 Girar roleta</button>
+  <div class="reveal" id="g4-actions" style="display:none">
+    <button class="btn btn-ok" onclick="wheelDone(true)">✅ Cumpriu<small id="g4-okl"></small></button>
+    <button class="btn btn-bad" onclick="wheelDone(false)">🙈 Passou a vez<small>0 pontos</small></button>
+  </div>
+</section>
+
+<!-- ================= STATS ================= -->
+<section class="screen" id="s-stats">
+  <div class="topbar"><button class="iconbtn" onclick="go('menu')">‹</button><span class="title">Resumo da noite</span><span class="iconbtn" style="opacity:0"></span></div>
+  <div class="scoreboard" data-sb></div>
+  <div class="stat-grid" id="stats-grid"></div>
+  <h3 class="mt24" style="font-size:18px">Últimas jogadas</h3>
+  <div class="hist" id="hist"></div>
+  <button class="btn btn-ghost mt24" onclick="newNight()">🏠 Novo jantar (trocar nomes)</button>
+</section>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- winner modal -->
+<div class="overlay" id="ov-win">
+  <div class="modal">
+    <div class="big" id="win-emo">🏆</div>
+    <h2 id="win-title"></h2>
+    <p id="win-sub"></p>
+    <button class="btn btn-primary" onclick="closeWin(false)">Continuar jogando ✨</button>
+    <button class="btn btn-ghost" onclick="closeWin(true)">Zerar placar e revanche</button>
+  </div>
+</div>
+<!-- confirm modal -->
+<div class="overlay" id="ov-confirm">
+  <div class="modal">
+    <div class="big">🫣</div>
+    <h2 id="cf-title">Tem certeza?</h2>
+    <p id="cf-sub"></p>
+    <button class="btn btn-bad" id="cf-yes">Sim, pode</button>
+    <button class="btn btn-ghost" onclick="hide('ov-confirm')">Cancelar</button>
+  </div>
+</div>
+
+<script>
+/* ===================== CONTEÚDO ===================== */
+const LIKELY = [
+  ["🚗","Quem é mais provável de esquecer onde estacionou o carro?"],
+  ["😂","Quem é mais provável de dar a primeira risada em um momento inapropriado?"],
+  ["🧟","Quem é mais provável de sobreviver a um apocalipse zumbi usando apenas utensílios de cozinha?"],
+  ["😭","Quem é mais provável de chorar assistindo a um comercial de TV?"],
+  ["🐶","Quem é mais provável de adotar 5 cachorros de rua de uma vez?"],
+  ["🗺️","Quem é mais provável de se perder usando o GPS?"],
+  ["📱","Quem é mais provável de ficar 1 hora escolhendo um filme e dormir nos primeiros 10 minutos?"],
+  ["🍕","Quem é mais provável de pedir delivery com a geladeira cheia?"],
+  ["💸","Quem é mais provável de gastar o salário inteiro em uma promoção “imperdível”?"],
+  ["🎤","Quem é mais provável de pegar o microfone no karaokê sem ninguém pedir?"],
+  ["🕵️","Quem é mais provável de stalkear a ex de alguém e curtir foto de 2016 sem querer?"],
+  ["⏰","Quem é mais provável de chegar atrasada no próprio casamento?"],
+  ["🧹","Quem é mais provável de fingir que não viu a louça na pia?"],
+  ["🌶️","Quem é mais provável de pedir o prato mais apimentado e se arrepender?"],
+  ["🛏️","Quem é mais provável de roubar o cobertor inteiro de madrugada?"],
+  ["🎁","Quem é mais provável de abrir o presente de aniversário antes da hora?"],
+  ["👵","Quem é mais provável de virar a vovó que dá bronca em todo mundo no grupo da família?"],
+  ["🚿","Quem é mais provável de dar um show completo no chuveiro?"],
+  ["🧳","Quem é mais provável de levar 3 malas pra uma viagem de fim de semana?"],
+  ["🍰","Quem é mais provável de comer a sobremesa antes do jantar?"],
+  ["🎭","Quem é mais provável de inventar uma desculpa elaborada pra não ir a um evento?"],
+  ["💌","Quem é mais provável de mandar uma mensagem gigante às 3h da manhã?"],
+  ["🐱","Quem é mais provável de conversar com o pet como se fosse gente?"],
+  ["🔥","Quem é mais provável de colocar fogo na cozinha tentando impressionar?"],
+  ["🥇","Quem é mais provável de levar um jogo de tabuleiro a sério demais?"],
+  ["💍","Quem é mais provável de fazer um pedido de casamento em público e exagerado?"],
+  ["📸","Quem é mais provável de tirar 47 fotos do prato antes de comer?"],
+  ["🧠","Quem é mais provável de lembrar de uma briga de 2 anos atrás nos mínimos detalhes?"],
+  ["🏝️","Quem é mais provável de largar tudo e abrir uma pousada na praia?"],
+  ["😴","Quem é mais provável de dormir no meio de uma conversa importante?"],
+];
+const SCENARIOS = [
+  ["🪓","Vocês foram transportadas para um filme de terror dos anos 80. O pneu furou no meio de uma estrada deserta. Quem vai checar o barulho na floresta e quem fica trancada no carro bolando um plano?"],
+  ["👑","Vocês têm 24 horas para planejar e executar o roubo da coroa britânica. Quais são as habilidades especiais de cada uma no esquema?"],
+  ["🔄","Um feitiço fez vocês trocarem de corpo por um dia. Qual é a primeira coisa que cada uma faz no corpo da outra, e como disfarçam no trabalho?"],
+  ["💰","Vocês ganharam 50 milhões na loteria, mas só podem gastar tudo nas próximas 48 horas, sem comprar imóveis. Qual é o roteiro de vocês?"],
+  ["🏝️","Vocês naufragaram numa ilha deserta com apenas três itens que estavam na bolsa de cada uma AGORA. O que tem na bolsa e como sobrevivem?"],
+  ["👽","Alienígenas pousaram no quintal e escolheram vocês duas como embaixadoras da Terra. Qual é a primeira coisa que mostram a eles e o que escondem a todo custo?"],
+  ["⏳","Vocês voltaram no tempo para o dia em que se conheceram, mas só uma lembra do futuro. Como ela convence a outra a se apaixonar mais rápido?"],
+  ["🎤","Vocês foram confundidas com uma dupla famosa e precisam se apresentar em 10 minutos para 50 mil pessoas. Qual é o nome da dupla, a música e a coreografia?"],
+  ["🧟","Apocalipse zumbi começou durante este jantar. Qual é o plano de fuga do restaurante até o abrigo, e quem é a líder e quem é a estrategista?"],
+  ["🏰","Vocês herdaram um castelo mal-assombrado na Escócia, mas só ficam com ele se passarem uma noite inteira lá. Como dividem os turnos e o que fazem quando ouvem o primeiro barulho?"],
+  ["🍳","Vocês foram selecionadas para a final do MasterChef, mas o prato tem que ser feito só com o que tem na geladeira de vocês hoje. Qual é o prato e o nome pomposo dele?"],
+  ["🐉","Um dragão sequestrou o pet de vocês (ou a planta favorita). Vocês têm uma espada, um ukulele e um cupom de desconto. Qual é o plano de resgate?"],
+  ["🎢","Vocês viraram vilãs de um filme da Disney. Qual é o nome da dupla do mal, o plano maligno e a música-tema?"],
+  ["🚀","Foram escolhidas para colonizar Marte, mas só podem levar 5 objetos e 1 pessoa ou animal a mais. O que vai na nave?"],
+  ["🕵️‍♀️","Descobriram que a vizinha é uma espiã internacional e ela sabe que vocês sabem. Como lidam com isso no churrasco do prédio no domingo?"],
+  ["🧞","Um gênio dá três desejos, mas cada um tem que ser para a outra e só vale coisas que a outra nunca pediu em voz alta. Quais são?"],
+  ["🏆","Vocês vão competir nas Olimpíadas numa modalidade inventada agora. Qual é o esporte, qual é o uniforme e qual é o ritual pré-competição?"],
+  ["📵","A internet do mundo acabou pra sempre a partir de agora. Como fica a rotina de vocês nos próximos 30 dias e qual é a primeira grande briga?"],
+];
+const GUESSES = [
+  "Qual foi o exato momento em que ela percebeu que estava apaixonada por você?",
+  "Se ela pudesse comer apenas uma refeição pelo resto da vida, qual seria?",
+  "Qual é a pequena mania sua que ela acha mais fofa (mesmo que nunca tenha dito)?",
+  "O que ela faria primeiro se ficasse invisível por um dia?",
+  "Qual é a lembrança favorita dela do primeiro mês de namoro de vocês?",
+  "Qual é a música que ela coloca quando quer se sentir poderosa?",
+  "Qual é o maior medo bobo dela (tipo inseto, elevador ou palhaço)?",
+  "Se ela ganhasse uma viagem com tudo pago amanhã, pra onde ela iria?",
+  "Qual filme ou série ela já reviu mais vezes na vida?",
+  "Qual é a comida que ela finge gostar mas na verdade detesta?",
+  "Qual foi o presente que você deu que ela mais gostou de verdade?",
+  "Qual é o apelido secreto que ela te dá na cabeça dela?",
+  "Qual era o sonho de profissão dela quando criança?",
+  "Qual foi a última coisa que a fez rir sozinha olhando o celular?",
+  "Se ela pudesse jantar com qualquer pessoa, viva ou não, quem seria?",
+  "Qual parte do corpo dela ela mais gosta?",
+  "Qual é a primeira coisa que ela pensa ao acordar na maioria dos dias?",
+  "O que ela mais admira em você, mas tem vergonha de falar?",
+  "Qual é o hábito dela que ela acha que você não percebe?",
+  "Qual é a lembrança de infância mais feliz dela?",
+  "Qual superpoder ela escolheria se só pudesse ter um?",
+  "Qual é o lugar do mundo onde ela se sente mais em casa, além da casa de vocês?",
+  "Qual é a coisa mais boba pela qual ela já chorou?",
+  "O que ela diria que é o momento mais romântico que vocês já viveram?",
+  "Qual é o doce da infância que ela compraria agora se encontrasse?",
+];
+const WHEEL = [
+  ["🥂","Faça um brinde improvisado de 20 segundos a algo que você ama nela."],
+  ["🎶","Cante o refrão de uma música que te lembra ela (sem rir!)."],
+  ["🤫","Conte um segredo bobo que ela ainda não sabe."],
+  ["💬","Diga 3 elogios seguidos sem repetir a palavra “linda”."],
+  ["🎭","Imite ela pedindo comida num restaurante."],
+  ["💌","Descreva o encontro perfeito de vocês daqui a 10 anos."],
+  ["😘","Dê um beijo em um lugar que ela escolher (vale testa!)."],
+  ["🔁","Conte como foi o dia de hoje do ponto de vista dela."],
+];
+const EMOJIS_AV = ["🌹","🌙","🦋","🌸","🍷","🔥","🌊","⭐","🐱","🐺","🦊","🍓","🍒","🌈","💜","🖤","👑","🪩","🧿","🍑"];
+const EMOJIS_NOTE = ["💡","❤️","😂","🍕","🎬","✈️","🎵","😱","🏖️","🐶","🍫","🎁","😴","💃","📱","🌧️","🏠","👩‍❤️‍👩","🤔","🔥","🍷","🎮","📚","🧘‍♀️"];
+const RATING_LABELS = {1:"💀 Mortas em 5 minutos",2:"😬 Sobrevivem por milagre",3:"😅 Dá pro gasto",4:"💪 Dupla formidável",5:"👑 Imbatíveis, casal do ano"};
+const NOTE_COLORS = ["y","pk","pu","gr","bl","or"];
+
+/* ===================== ESTADO ===================== */
+const KEY = "jantar-a-dois-v1";
+const fresh = () => ({
+  n:["",""], av:["🌹","🌙"], score:[0,0], goal:10, started:false, winnerShown:false,
+  decks:{1:[],2:[],3:[]}, idx:{1:0,2:0,3:0}, g2:{ratings:[]}, g3:{turn:0,notes:[],final:-1}, g4:{turn:0,cur:null,rot:0},
+  hist:[], rounds:0
+});
+let S = fresh();
+let g1Picked=false, g2Rated=0, noteEmoji="💡", wheelSpinning=false;
+
+function save(){ try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} }
+function load(){ try{const r=localStorage.getItem(KEY); if(r){S=Object.assign(fresh(),JSON.parse(r)); return true;}}catch(e){} return false; }
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function deckFor(g){ const src = g===1?LIKELY:g===2?SCENARIOS:GUESSES; if(!S.decks[g].length || S.idx[g]>=S.decks[g].length){ S.decks[g]=shuffle(src.map((_,i)=>i)); S.idx[g]=0; } return src[S.decks[g][S.idx[g]]]; }
+function vib(ms){ if(navigator.vibrate) try{navigator.vibrate(ms);}catch(e){} }
+
+/* ===================== NAV ===================== */
+const $=id=>document.getElementById(id);
+function show(id){$(id).classList.add('show')} function hide(id){$(id).classList.remove('show')}
+function go(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $('s-'+name).classList.add('active'); window.scrollTo({top:0});
+  renderScore();
+  if(name==='g1') renderG1(); if(name==='g2') renderG2(); if(name==='g3') renderG3(); if(name==='g4') renderG4(); if(name==='stats') renderStats(); if(name==='menu') renderMenu();
+  save();
+}
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2200); }
+
+/* ===================== HOME ===================== */
+function buildEmojiGrids(){
+  [1,2].forEach(p=>{ const g=$('eg'+p); g.innerHTML=EMOJIS_AV.map(e=>`<button onclick="setAv(${p},'${e}')" class="${S.av[p-1]===e?'sel':''}">${e}</button>`).join(''); });
+}
+function toggleEmoji(p){ const g=$('eg'+p); const other=$('eg'+(p===1?2:1)); other.classList.remove('open'); g.classList.toggle('open'); }
+function setAv(p,e){ S.av[p-1]=e; $('av'+p).textContent=e; $('eg'+p).classList.remove('open'); buildEmojiGrids(); }
+document.querySelectorAll('#goal button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#goal button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');S.goal=+b.dataset.g;});
+function startGame(){
+  const n1=$('in-n1').value.trim()||"Jogadora 1", n2=$('in-n2').value.trim()||"Jogadora 2";
+  const keepAv=S.av.slice(), goal=S.goal;
+  S=fresh(); S.av=keepAv; S.goal=goal; S.n=[n1,n2]; S.started=true;
+  save(); go('menu'); toast(`Boa noite, ${n1} e ${n2} 🥂`);
+}
+function continueGame(){ go('menu'); toast("Bem-vindas de volta 💜"); }
+function newNight(){ askConfirm("Novo jantar?","Isso apaga nomes e placar desta noite.",()=>{ localStorage.removeItem(KEY); S=fresh(); initHome(); go('home'); }); }
+function initHome(){
+  $('in-n1').value=S.n[0]||""; $('in-n2').value=S.n[1]||""; $('av1').textContent=S.av[0]; $('av2').textContent=S.av[1];
+  document.querySelectorAll('#goal button').forEach(b=>b.classList.toggle('sel',+b.dataset.g===S.goal));
+  buildEmojiGrids();
+}
+
+/* ===================== PLACAR ===================== */
+function renderScore(){
+  const lead = S.score[0]===S.score[1]?-1:(S.score[0]>S.score[1]?0:1);
+  const goalTxt = S.goal>=999?'':` · meta ${S.goal}`;
+  document.querySelectorAll('[data-sb]').forEach(sb=>{
+    sb.innerHTML=`
+      <div class="player p1 ${lead===0?'leader':''}"><span class="avatar">${S.av[0]}</span><div style="min-width:0"><div class="pname">${esc(S.n[0])}</div><div class="pscore" id="sc0">${S.score[0]}</div></div></div>
+      <div class="vs">vs</div>
+      <div class="player p2 right ${lead===1?'leader':''}"><span class="avatar">${S.av[1]}</span><div style="min-width:0"><div class="pname">${esc(S.n[1])}</div><div class="pscore" id="sc1">${S.score[1]}</div></div></div>
+      ${S.goal<999?`<div style="grid-column:1/-1"><div class="progressbar" title="progresso até a meta"><i style="width:${Math.min(100,Math.max(S.score[0],S.score[1])/S.goal*100)}%"></i></div></div>`:''}`;
+  });
+  document.querySelectorAll('[data-n1]').forEach(e=>e.textContent=S.n[0]);
+  document.querySelectorAll('[data-n2]').forEach(e=>e.textContent=S.n[1]);
+  document.querySelectorAll('[data-av1]').forEach(e=>e.textContent=S.av[0]);
+  document.querySelectorAll('[data-av2]').forEach(e=>e.textContent=S.av[1]);
+  void goalTxt;
+}
+function addPoint(p,reason){
+  S.score[p]++; S.rounds++;
+  S.hist.unshift({who:p,reason,t:Date.now()}); S.hist=S.hist.slice(0,30);
+  renderScore(); vib(30);
+  document.querySelectorAll('.pscore').forEach(e=>{ if(e.id==='sc'+p){ e.classList.remove('bump'); void e.offsetWidth; e.classList.add('bump'); }});
+  save(); checkWin();
+}
+function logOnly(reason){ S.rounds++; S.hist.unshift({who:-1,reason,t:Date.now()}); S.hist=S.hist.slice(0,30); save(); }
+function checkWin(){
+  if(S.goal>=999) return;
+  const w = S.score[0]>=S.goal?0:S.score[1]>=S.goal?1:-1;
+  if(w<0 || S.winnerShown) return;
+  S.winnerShown=true; save();
+  const loser = w===0?1:0;
+  $('win-emo').textContent=S.av[w];
+  $('win-title').textContent=`${S.n[w]} venceu o jantar! 🏆`;
+  $('win-sub').textContent=`${S.score[w]} a ${S.score[loser]}. ${S.n[loser]} paga a sobremesa (ou uma massagem, vocês decidem).`;
+  show('ov-win'); confetti(); vib([60,40,60,40,120]);
+}
+function closeWin(reset){ hide('ov-win'); if(reset){ S.score=[0,0]; S.winnerShown=false; renderScore(); toast("Revanche! Placar zerado 🔥"); } else { S.goal=999; toast("Sem meta agora: joguem até o vinho acabar 🍷"); } save(); renderScore(); }
+function confirmReset(){ askConfirm("Zerar o placar?","Os nomes continuam, só os pontos voltam pra zero.",()=>{S.score=[0,0];S.winnerShown=false;S.hist=[];S.rounds=0;S.g2.ratings=[];renderScore();save();toast("Placar zerado ↺");}); }
+function askConfirm(title,sub,fn){ $('cf-title').textContent=title; $('cf-sub').textContent=sub; $('cf-yes').onclick=()=>{hide('ov-confirm');fn();}; show('ov-confirm'); }
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+/* ===================== MENU ===================== */
+function renderMenu(){
+  const subs=["Sem pressa. A noite é de vocês.","Regra de ouro: quem rir primeiro, bebe.","O placar importa menos do que parece.","Celular só pra isso aqui, combinado?","Dica: joguem até a sobremesa."];
+  $('menu-sub').textContent=subs[S.rounds%subs.length];
+}
+function randomMode(){ go(['g1','g2','g3','g4'][Math.floor(Math.random()*4)]); }
+function skipQ(g){ S.idx[g]++; if(g===3){S.g3.notes=[];S.g3.final=-1;} save(); go('g'+g); toast("Pulamos essa 😉"); }
+
+/* ===================== G1 ===================== */
+function renderG1(){
+  const [emo,q]=deckFor(1); $('g1-emo').textContent=emo; $('g1-q').textContent=q;
+  $('g1-count').textContent=`Pergunta ${S.idx[1]+1} de ${LIKELY.length}`;
+  g1Picked=false; $('g1-next').disabled=true;
+  ['g1-c1','g1-c2'].forEach(id=>$(id).classList.remove('picked','dim'));
+  const card=document.querySelector('#s-g1 .qcard'); card.style.animation='none'; void card.offsetWidth; card.style.animation='';
+}
+function pickLikely(p){
+  if(g1Picked) return; g1Picked=true;
+  const q=$('g1-q').textContent;
+  if(p===0){ addPoint(0,"💞 Mais provável: as duas"); addPoint(1,"💞 Mais provável: as duas"); $('g1-c1').classList.add('picked'); $('g1-c2').classList.add('picked'); toast("Culpadas em conjunto 💞"); }
+  else { addPoint(p-1,"🤔 "+q.replace("Quem é mais provável de ","…")); $('g1-c'+p).classList.add('picked'); $('g1-c'+(p===1?2:1)).classList.add('dim'); toast(`${S.n[p-1]} foi a escolhida! +1`); }
+  $('g1-next').disabled=false;
+}
+function nextQ(g){ S.idx[g]++; save(); if(g===1) renderG1(); if(g===2) renderG2(); }
+
+/* ===================== G2 ===================== */
+function renderG2(){
+  const [emo,q]=deckFor(2); $('g2-emo').textContent=emo; $('g2-q').textContent=q;
+  $('g2-count').textContent=`Cenário ${S.idx[2]+1} de ${SCENARIOS.length}`;
+  g2Rated=0; $('g2-next').disabled=true; $('rating-label').textContent="toquem nas estrelas";
+  $('stars').innerHTML=[1,2,3,4,5].map(i=>`<button class="star" onclick="rate(${i})">⭐</button>`).join('');
+  updAvg();
+  const card=document.querySelector('#s-g2 .qcard'); card.style.animation='none'; void card.offsetWidth; card.style.animation='';
+}
+function rate(n){
+  const first=g2Rated===0; g2Rated=n; vib(15);
+  document.querySelectorAll('#stars .star').forEach((s,i)=>s.classList.toggle('on',i<n));
+  $('rating-label').textContent=RATING_LABELS[n];
+  if(first){ S.g2.ratings.push(n); logOnly(`🎬 Cenário avaliado com ${n}★`); } else { S.g2.ratings[S.g2.ratings.length-1]=n; }
+  save(); updAvg(); $('g2-next').disabled=false;
+}
+function updAvg(){ const r=S.g2.ratings; $('g2-done').textContent=r.length; $('g2-avg').textContent=r.length?(r.reduce((a,b)=>a+b,0)/r.length).toFixed(1)+"★":"–"; }
+
+/* ===================== G3 ===================== */
+function renderG3(){
+  const q=deckFor(3); const owner=S.g3.turn%2, guesser=owner===0?1:0;
+  $('g3-q').innerHTML=`Sobre <b>${esc(S.n[owner])}</b>: ${esc(q)}`;
+  $('g3-turn').innerHTML=`<span class="chip">${S.av[guesser]} ${esc(S.n[guesser])} chuta</span> <span>sobre</span> <span class="chip">${S.av[owner]} ${esc(S.n[owner])}</span> <span style="width:100%;font-size:11px;opacity:.7">Rodada ${S.idx[3]+1} de ${GUESSES.length}</span>`;
+  $('g3-owner').textContent=S.n[owner]; $('g3-okl').textContent=`+1 pra ${S.n[guesser]}`;
+  $('emostrip').innerHTML=EMOJIS_NOTE.map(e=>`<button onclick="pickNoteEmoji('${e}')" class="${noteEmoji===e?'sel':''}">${e}</button>`).join('');
+  renderNotes();
+}
+function pickNoteEmoji(e){ noteEmoji=e; document.querySelectorAll('#emostrip button').forEach(b=>b.classList.toggle('sel',b.textContent===e)); }
+function addNote(){
+  const inp=$('note-in'); const t=inp.value.trim(); if(!t){ inp.focus(); return; }
+  S.g3.notes.push({t,e:noteEmoji,c:NOTE_COLORS[S.g3.notes.length%NOTE_COLORS.length],r:(Math.random()*6-3).toFixed(1)});
+  inp.value=''; save(); renderNotes(); vib(10); inp.focus();
+}
+function delNote(i,ev){ ev.stopPropagation(); S.g3.notes.splice(i,1); if(S.g3.final===i) S.g3.final=-1; else if(S.g3.final>i) S.g3.final--; save(); renderNotes(); }
+function setFinal(i){ S.g3.final=S.g3.final===i?-1:i; save(); renderNotes(); vib(15); }
+function clearNotes(){ S.g3.notes=[]; S.g3.final=-1; save(); renderNotes(); }
+function renderNotes(){
+  const n=S.g3.notes;
+  $('notes').innerHTML = n.length? n.map((x,i)=>`<div class="note ${x.c} ${S.g3.final===i?'final':''}" style="--r:${x.r}deg" onclick="setFinal(${i})"><span class="pin">📌</span><button class="del" onclick="delNote(${i},event)">✕</button><span class="ne">${x.e}</span>${esc(x.t)}</div>`).join('')
+    : `<div class="empty-board">O board está vazio. Joguem ideias aqui enquanto pensam alto 💭</div>`;
+}
+function revealG3(ok){
+  const owner=S.g3.turn%2, guesser=owner===0?1:0;
+  const fin = S.g3.final>=0 ? S.g3.notes[S.g3.final] : null;
+  const finTxt = fin ? ` (“${fin.e} ${fin.t}”)` : '';
+  if(ok){ addPoint(guesser,`🔮 Acertou sobre ${S.n[owner]}${finTxt}`); toast(`${S.n[guesser]} conhece bem demais! +1 🎯`); }
+  else { logOnly(`💀 ${S.n[guesser]} errou feio sobre ${S.n[owner]}${finTxt}`); toast("Errou feio. Mais um motivo pra conversar 😏"); vib([20,30,20]); }
+  S.g3.turn++; S.idx[3]++; S.g3.notes=[]; S.g3.final=-1; save(); renderG3();
+}
+
+/* ===================== G4: ROLETA ===================== */
+function buildWheel(){
+  const w=$('wheel'); const n=WHEEL.length;
+  w.querySelectorAll('span').forEach(s=>s.remove());
+  WHEEL.forEach((item,i)=>{ const a=(i+0.5)*(360/n); const s=document.createElement('span');
+    s.style.cssText=`position:absolute;left:50%;top:50%;width:0;height:0;transform:rotate(${a}deg)`;
+    s.innerHTML=`<em style="position:absolute;left:0;top:-80px;font-style:normal;transform:translate(-50%,-50%) rotate(${-a}deg)">${item[0]}</em>`; w.appendChild(s); });
+  w.style.transform=`rotate(${S.g4.rot}deg)`;
+}
+function renderG4(){
+  const p=S.g4.turn%2;
+  $('g4-turn').innerHTML=`<span>Vez de</span> <span class="chip">${S.av[p]} ${esc(S.n[p])}</span>`;
+  $('g4-okl').textContent=`+1 pra ${S.n[p]}`;
+  buildWheel();
+  if(S.g4.cur!==null){ const it=WHEEL[S.g4.cur]; $('g4-emo').textContent=it[0]; $('g4-q').textContent=it[1]; $('g4-actions').style.display='grid'; $('g4-spin').style.display='none'; }
+  else { $('g4-emo').textContent='🎡'; $('g4-q').textContent='Gire a roleta e descubra o desafio da vez.'; $('g4-actions').style.display='none'; $('g4-spin').style.display='flex'; }
+}
+function spinWheel(){
+  if(wheelSpinning) return; wheelSpinning=true; vib(20);
+  const n=WHEEL.length, seg=360/n, pick=Math.floor(Math.random()*n);
+  // pointer no topo (0deg): queremos o centro do segmento `pick` em cima => rotação final ≡ -(pick+0.5)*seg (mod 360)
+  const target = 360*5 + (360 - ((pick+0.5)*seg)) ;
+  const base = Math.floor(S.g4.rot/360)*360;
+  S.g4.rot = base + target; $('wheel').style.transform=`rotate(${S.g4.rot}deg)`; $('g4-spin').disabled=true;
+  setTimeout(()=>{ wheelSpinning=false; $('g4-spin').disabled=false; S.g4.cur=pick; save(); renderG4(); vib([30,30,30]); },4100);
+}
+function wheelDone(ok){
+  const p=S.g4.turn%2; const it=WHEEL[S.g4.cur];
+  if(ok){ addPoint(p,`🎡 ${it[0]} desafio cumprido`); toast(`${S.n[p]} mandou bem! +1 🥂`); } else { logOnly(`🙈 ${S.n[p]} passou a vez na roleta`); toast("Passou a vez. A próxima não escapa 😏"); }
+  S.g4.cur=null; S.g4.turn++; save(); renderG4();
+}
+
+/* ===================== STATS ===================== */
+function renderStats(){
+  const r=S.g2.ratings; const avg=r.length?(r.reduce((a,b)=>a+b,0)/r.length).toFixed(1):"–";
+  const acertos=S.hist.filter(h=>h.reason.startsWith("🔮")).length, erros=S.hist.filter(h=>h.reason.startsWith("💀")).length;
+  $('stats-grid').innerHTML=`<div class="stat"><b>${S.rounds}</b><span>jogadas</span></div><div class="stat"><b>${avg}</b><span>sobrevivência</span></div><div class="stat"><b>${acertos}/${acertos+erros}</b><span>suposições</span></div>`;
+  $('hist').innerHTML = S.hist.length ? S.hist.slice(0,15).map(h=>`<div class="item"><span>${h.who>=0?S.av[h.who]:'🎬'}</span><span class="who">${h.who>=0?esc(S.n[h.who]):'Casal'}</span><span class="muted" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(h.reason)}</span></div>`).join('') : `<p class="muted small">Nada ainda. Voltem pro menu e joguem!</p>`;
+}
+
+/* ===================== CONFETTI ===================== */
+function confetti(){
+  const c=$('confetti'), ctx=c.getContext('2d'); c.width=innerWidth*devicePixelRatio; c.height=innerHeight*devicePixelRatio; ctx.scale(devicePixelRatio,devicePixelRatio);
+  const cols=['#ff5c8a','#b069ff','#ffd166','#4ade80','#fff','#ff8ab0'];
+  const ps=Array.from({length:180},()=>({x:Math.random()*innerWidth,y:-20-Math.random()*innerHeight*.5,w:6+Math.random()*6,h:8+Math.random()*8,c:cols[Math.random()*cols.length|0],vy:2+Math.random()*3,vx:-1.5+Math.random()*3,r:Math.random()*Math.PI,vr:-.15+Math.random()*.3}));
+  let t0=performance.now();
+  (function f(now){ ctx.clearRect(0,0,innerWidth,innerHeight); let alive=false;
+    ps.forEach(p=>{ p.y+=p.vy; p.x+=p.vx+Math.sin(p.y/30)*.6; p.r+=p.vr; if(p.y<innerHeight+30) alive=true; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r); ctx.fillStyle=p.c; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore(); });
+    if(alive && now-t0<6000) requestAnimationFrame(f); else ctx.clearRect(0,0,innerWidth,innerHeight); })(t0);
+}
+
+/* ===================== BOOT ===================== */
+(function boot(){
+  const had=load();
+  initHome();
+  if(had && S.started){ $('btn-continue').style.display='flex'; }
+  go('home');
+})();
+</script>
+</body>
+</html>
