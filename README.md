@@ -2,6 +2,10 @@
 
 Jogo de jantar para casais, mobile-first, 100% offline. Um único arquivo: `jantar-a-dois.html` (ou `index.html`).
 
+**Jogue online:** https://roberttacosta.github.io/app-jantar-a-dois/
+
+Para publicar uma atualização: edite `index.html`, depois `git add -A && git commit -m "ajuste" && git push`. O GitHub Pages atualiza em ~1 minuto.
+
 ## Como rodar
 - **No computador:** dê dois cliques em `jantar-a-dois.html` (ou `index.html`) (abre no navegador).
 - **No celular (recomendado):** na pasta do arquivo, rode um servidor local e abra o endereço no celular (mesmo Wi-Fi):
